@@ -3,6 +3,8 @@ import sys
 
 
 if __name__ == "__main__":
+    # python-dotenv is a third party package so it may not be installed
+    # gracefully handle the missing package instead of crashing
     try:
         from dotenv import load_dotenv
     except ImportError:
@@ -10,8 +12,11 @@ if __name__ == "__main__":
         print("run: pip install python-dotenv")
         sys.exit(1)
 
+    # loads key=value pairs from .env file into os.environ
+    # shell environment variables always take priority over .env values
     load_dotenv()
 
+    # all required configuration keys the program needs to run
     required = ["MATRIX_MODE",
                 "DATABASE_URL",
                 "API_KEY",
@@ -22,13 +27,14 @@ if __name__ == "__main__":
     not_found = []
     config = {}
     for name in required:
+        # returns None if the variable is not set, never crashes
         value = os.environ.get(name)
         if not value:
             not_found += [name]
-
         else:
             config.update({name: value})
 
+    # report all missing variables at once before exiting
     if not_found:
         print(f"Missing configuration: {not_found}")
         print("double check your .env and fill in your values")
@@ -37,6 +43,8 @@ if __name__ == "__main__":
     print("\nORACLE STATUS: Reading the Matrix...\n")
     print("Configuration loaded:")
     print(f"Mode: {config['MATRIX_MODE']}")
+
+    # behavior changes based on MATRIX_MODE — development vs production
     data_base = ('Connected to local instance'
                  if config['MATRIX_MODE'] == 'development'
                  else 'Connected to production database')
